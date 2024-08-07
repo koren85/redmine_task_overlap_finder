@@ -1,0 +1,114 @@
+<h1>Поиск пересекающихся задач</h1>
+
+<% if flash[:error] %>
+  <div class="error"><%= flash[:error] %></div>
+<% end %>
+
+<%= form_tag(task_overlap_finder_search_path, method: :post) do %>
+  <div>
+    <%= label_tag(:start_date, 'Дата начала') %>
+    <%= date_field_tag(:start_date, @start_date) %>
+  </div>
+  <div>
+    <%= label_tag(:end_date, 'Дата окончания') %>
+    <%= date_field_tag(:end_date, @end_date) %>
+  </div>
+  <div>
+    <%= label_tag(:user_id, 'Исполнитель') %>
+    <%= select_tag(:user_id, options_from_collection_for_select(@employees, :id, :name, @user_id)) %>
+  </div>
+  <div>
+    <%= label_tag(:project_ids, 'Проекты') %>
+    <%= select_tag(:project_ids, options_from_collection_for_select(@projects, :id, :name, @project_ids), multiple: true) %>
+  </div>
+  <div>
+    <%= label_tag(:status_ids, 'Статусы задач') %>
+    <%= select_tag(:status_ids, options_from_collection_for_select(@statuses, :id, :name, @status_ids), multiple: true) %>
+  </div>
+  <div>
+    <%= submit_tag('Найти задачи') %>
+  </div>
+<% end %>
+
+<h2>Результаты поиска</h2>
+<table class="list issues">
+  <thead>
+  <tr>
+    <th class="id">#</th>
+    <th class="subject">Тема</th>
+    <th class="start_date">Дата начала</th>
+    <th class="due_date">Дата окончания</th>
+    <th class="estimated_hours">Оценка (ч)</th>
+    <th class="total_estimated_hours">Общая оценка (ч)</th>
+    <th class="spent_hours">Трудозатраты (ч)</th>
+    <th class="assigned_to">Исполнитель</th>
+    <th class="project">Проект</th>
+    <th class="status">Статус</th>
+  </tr>
+  </thead>
+  <tbody>
+  <% if @tasks.present? %>
+    <% @tasks.each do |task| %>
+      <tr>
+        <td><%= link_to "##{task.id}", issue_path(task) %></td>
+        <td class="subject"><%= task.subject %></td>
+        <td><%= task.start_date %></td>
+        <td><%= task.due_date %></td>
+        <td><%= task.estimated_hours %></td>
+        <td><%= TaskOverlapFinder.total_estimated_hours(task) %></td>
+        <td><%= TaskOverlapFinder.total_spent_hours(task, @user_id) %></td>
+        <td><%= task.assigned_to.name %></td>
+        <td><%= task.project.name %></td>
+        <td><%= task.status.name %></td>
+      </tr>
+    <% end %>
+    <tr>
+      <td colspan="4"><strong>Суммарные значения</strong></td>
+      <td><%= @total_estimated_hours %></td>
+      <td><%= @total_total_estimated_hours %></td>
+      <td><%= @total_spent_hours %></td>
+      <td colspan="3"></td>
+    </tr>
+  <% else %>
+    <tr>
+      <td colspan="10">Нет результатов</td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>
+
+<style>
+    table.list {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    table.list th, table.list td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        vertical-align: top;
+    }
+    table.list th.id, table.list td.id {
+        width: 5%;
+    }
+    table.list th.subject, table.list td.subject {
+        width: 20%;
+        word-break: break-word;
+    }
+    table.list th.start_date, table.list th.due_date, table.list th.estimated_hours, table.list th.total_estimated_hours, table.list th.spent_hours, table.list th.assigned_to, table.list th.project, table.list th.status,
+    table.list td.start_date, table.list td.due_date, table.list td.estimated_hours, table.list td.total_estimated_hours, table.list td.spent_hours, table.list td.assigned_to, table.list td.project, table.list td.status {
+        width: 10%;
+    }
+    table.list th, table.list td {
+        text-align: left;
+    }
+    @media (max-width: 600px) {
+        table.list th.subject, table.list td.subject {
+            width: auto;
+        }
+        table.list th.start_date, table.list th.due_date, table.list th.estimated_hours, table.list th.total_estimated_hours, table.list th.spent_hours, table.list th.assigned_to, table.list th.project, table.list th.status,
+        table.list td.start_date, table.list td.due_date, table.list td.estimated_hours, table.list td.total_estimated_hours, table.list td.spent_hours, table.list td.assigned_to, table.list td.project, table.list td.status {
+            display: block;
+            width: 100%;
+        }
+    }
+</style>

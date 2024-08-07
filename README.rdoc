@@ -1,0 +1,3 @@
+= redmine_task_overlap_finder
+
+Description goes here
