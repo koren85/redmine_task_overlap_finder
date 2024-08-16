@@ -8,6 +8,21 @@ Redmine::Plugin.register :redmine_task_overlap_finder do
   url 'http://example.com/path/to/your/plugin'
   author_url 'http://example.com/about'
 
+
+  settings default: {
+    'trackers' => [],
+    'user_groups' => [],
+    'statuses' => []
+  }, partial: 'settings/task_overlap_finder_settings'
+
+  # Регистрация нового разрешения
+  project_module :task_overlap_finder do
+    permission :view_overlapping_tasks, { task_overlap_finder: [:index] }
+  end
+
   # Регистрация пути к контроллеру
   menu :top_menu, :task_overlap_finder, { controller: 'task_overlap_finder', action: 'index' }, caption: 'Поиск пересекающихся задач'
 end
+
+# Подключение хука
+require_relative 'app/hooks/task_overlap_finder_hook_listener'

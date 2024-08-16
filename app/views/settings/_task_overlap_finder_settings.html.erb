@@ -1,0 +1,31 @@
+<h3>Настройки плагина "Task Overlap Finder"</h3>
+
+<fieldset>
+  <legend>Трекеры</legend>
+  <% Tracker.all.each do |tracker| %>
+
+      <%= check_box_tag 'settings[trackers][]', tracker.id, @settings['trackers'].include?(tracker.id.to_s) %>
+      <%= tracker.name %>
+    <br>
+  <% end %>
+</fieldset>
+
+<fieldset>
+  <legend>Группы пользователей</legend>
+  <% Group.all.each do |group| %>
+
+      <%= check_box_tag 'settings[user_groups][]', group.id, @settings['user_groups'].include?(group.id.to_s) %>
+      <%= group.lastname %>
+    <br>
+  <% end %>
+</fieldset>
+
+<fieldset>
+  <legend>Статусы задач</legend>
+  <% IssueStatus.all.each do |status| %>
+
+      <%= check_box_tag 'settings[statuses][]', status.id, @settings['statuses'].include?(status.id.to_s) %>
+      <%= status.name %>
+    <br>
+  <% end %>
+</fieldset>
