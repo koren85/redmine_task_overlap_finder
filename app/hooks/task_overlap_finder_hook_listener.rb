@@ -4,10 +4,6 @@ module TaskOverlapFinderHookListener
       issue = context[:issue]
       user = User.current
 
-
-      # Проверка наличия разрешения
-      return '' unless user.allowed_to?(:view_overlapping_tasks, issue.project) || user.admin?
-
       # Получение настроек плагина
       settings = Setting.plugin_redmine_task_overlap_finder
 
@@ -28,10 +24,6 @@ module TaskOverlapFinderHookListener
       issue = context[:issue]
       user = User.current
 
-
-      # Проверка наличия разрешения
-      return unless user.allowed_to?(:view_overlapping_tasks, issue.project)
-
       # Получение настроек плагина
       settings = Setting.plugin_redmine_task_overlap_finder
 
@@ -40,15 +32,12 @@ module TaskOverlapFinderHookListener
 
       # Проверка группы пользователей (исполнитель задачи должен входить в одну из указанных групп)
       assigned_user = issue.assigned_to
-      return '' unless assigned_user && assigned_user.groups.any? { |group| settings['user_groups'].include?(group.id.to_s) }
+      return unless assigned_user && assigned_user.groups.any? { |group| settings['user_groups'].include?(group.id.to_s) }
 
       # Проверка статуса задачи
       return unless settings['statuses'].include?(issue.status_id.to_s)
 
-      # Проверка изменений в сроках или назначенном исполнителе
-      if issue.saved_change_to_start_date? || issue.saved_change_to_due_date? || issue.saved_change_to_assigned_to_id?
-        check_and_flash_overlapping_tasks(context, issue)
-      end
+      check_and_notify_overlaps(context, issue)
     end
 
     private
@@ -63,22 +52,27 @@ module TaskOverlapFinderHookListener
       })
     end
 
-    def check_and_flash_overlapping_tasks(context, issue)
-      overlapping_tasks = find_overlapping_tasks(issue)
-      unless overlapping_tasks.empty?
-        links = overlapping_tasks.map do |task|
-          "##{task.id} - " + context[:controller].view_context.link_to(task.subject, context[:controller].view_context.issue_path(task))
-        end.join(', ')
+    def check_and_notify_overlaps(context, issue)
+      # Проверка изменений в сроках или назначенном исполнителе
+      if issue.saved_change_to_start_date? || issue.saved_change_to_due_date? || issue.saved_change_to_assigned_to_id?
+        overlapping_tasks = find_overlapping_tasks(issue)
+        unless overlapping_tasks.empty?
+          links = overlapping_tasks.map do |task|
+            "##{task.id} - " + context[:controller].view_context.link_to(task.subject, context[:controller].view_context.issue_path(task))
+          end.join(', ')
 
-        context[:controller].flash[:warning] = "Внимание! Эта задача пересекается по срокам и исполнителю с другими задачами: #{links}"
+          context[:controller].flash[:warning] = "Внимание! Эта задача пересекается по срокам и исполнителю с другими задачами: #{links}"
+        end
       end
     end
 
     def find_overlapping_tasks(issue)
+      # Определение диапазона дат для поиска пересекающихся задач
       date_range = DateRange.new(issue.start_date, issue.due_date)
       assigned_user = AssignedUser.new(issue.assigned_to_id)
 
-      RedmineTaskOverlapFinder::PluginAPI.find_tasks(date_range, assigned_user, [issue.project_id], [issue.status_id]).where.not(id: issue.id)
+      # Убираем ограничение по проекту и ищем задачи по всем проектам
+      RedmineTaskOverlapFinder::PluginAPI.find_tasks(date_range, assigned_user, [], [issue.status_id]).where.not(id: issue.id)
     end
   end
 end
