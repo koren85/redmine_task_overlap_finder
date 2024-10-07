@@ -4,6 +4,9 @@ module TaskOverlapFinderHookListener
       issue = context[:issue]
       user = User.current
 
+      # Проверка наличия разрешения на просмотр пересекающихся задач
+      return '' unless user.allowed_to?(:view_overlapping_tasks, issue.project)
+
       # Получение настроек плагина
       settings = Setting.plugin_redmine_task_overlap_finder
 
@@ -23,6 +26,9 @@ module TaskOverlapFinderHookListener
     def controller_issues_edit_after_save(context = {})
       issue = context[:issue]
       user = User.current
+
+      # Проверка наличия разрешения на просмотр пересекающихся задач
+      return unless user.allowed_to?(:view_overlapping_tasks, issue.project)
 
       # Получение настроек плагина
       settings = Setting.plugin_redmine_task_overlap_finder
