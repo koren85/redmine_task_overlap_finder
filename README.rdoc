@@ -1,3 +1,87 @@
-= redmine_task_overlap_finder
+= Redmine Task Overlap Finder Plugin
 
-Description goes here
+This plugin provides a way to identify and display overlapping tasks in Redmine. It shows tasks that overlap in terms of dates (start and due dates) and the same assigned user. The plugin includes settings to specify which trackers, user groups, and task statuses are applicable for this overlap check. Only users with specific permissions can view the overlap information.
+
+== Features
+
+- Display overlapping tasks on the issue page in a table format.
+- Show a warning message when saving an issue if it overlaps with other tasks.
+- Plugin settings to define:
+  * Trackers for which the overlap check applies.
+  * User groups whose members will be checked for task overlap.
+  * Task statuses that will trigger the overlap check.
+- Permission control for viewing overlap information.
+  * Users with the `view_overlapping_tasks` permission can see the overlap details.
+  * Administrators can always see the overlap details, provided the task matches the plugin's settings.
+
+== How to Install
+
+1. Clone or copy the plugin into Redmine's `plugins` directory:
+git clone https://github.com/your_username/redmine_task_overlap_finder.git plugins/redmine_task_overlap_finder
+
+swift
+Копировать код
+
+2. Run the migration to install any required database changes:
+bundle install bundle exec rake redmine:plugins
+RAILS_ENV=production
+
+markdown
+Копировать код
+
+3. Restart Redmine.
+
+== How to Configure
+
+1. Go to **Administration > Roles and Permissions** and enable the `view_overlapping_tasks` permission for relevant roles.
+2. Go to **Administration > Plugins > Redmine Task Overlap Finder** and click **Configure**.
+3. In the settings page:
+- Select **Trackers**: Choose the trackers for which the plugin will check for task overlaps.
+- Select **User Groups**: Choose groups of users whose tasks will be checked for overlaps.
+- Select **Task Statuses**: Define the task statuses for which overlaps will be detected.
+
+4. Enable the plugin module in your projects:
+- Go to the **Settings** of each project, and under the **Modules** tab, check the **Task Overlap Finder** module.
+
+== Enabling the Plugin for All Projects
+
+To enable the plugin across all existing projects, run this script in the Redmine console:
+
+```ruby
+plugin_name = 'task_overlap_finder'
+
+Project.all.each do |project|
+unless project.enabled_module_names.include?(plugin_name)
+ project.enabled_module_names += [plugin_name]
+ project.save
+end
+end
+
+puts "Plugin '#{plugin_name}' enabled for all projects."
+== Usage
+
+Open an issue that meets the plugin's criteria (i.e., it belongs to a selected tracker, has an applicable status, and is assigned to a member of the selected groups).
+If there are any overlapping tasks (tasks with the same assigned user and overlapping dates), a table titled Overlapping Tasks will appear at the top of the issue's page. The table will display:
+Task number (as a clickable link).
+Task subject (as a clickable link).
+Start date, due date, estimated time, project, and version.
+When you edit and save an issue, if the task overlaps with others (in terms of dates or assigned user), a warning message will appear:
+csharp
+Копировать код
+Warning: This task overlaps with the following tasks: #123 - Task subject
+== Permissions and Security
+
+Only users with the view_overlapping_tasks permission will be able to see the table of overlapping tasks and the warning message.
+Administrators will always see overlap information if the task matches the plugin settings, regardless of their group membership.
+Users without permission will not see the table or any warning messages related to task overlaps.
+== Potential Issues
+
+No Overlap Information Displayed:
+
+Ensure the issue belongs to a selected tracker and has an applicable status.
+Ensure the assigned user is part of one of the selected groups.
+Ensure the module is enabled in the project's settings.
+No Warning Message on Save:
+
+Ensure there are other tasks assigned to the same user that overlap in terms of start or due dates.
+Ensure the issue's dates or assigned user were changed before saving.
