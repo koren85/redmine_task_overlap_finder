@@ -14,7 +14,9 @@ class TaskOverlapFinderController < ApplicationController
     @total_spent_hours = 0
 
     # Подготовка данных для отображения
-    @employees = Group.find_by(lastname: 'Сотрудники').users.order('users.lastname, users.firstname')
+    @employees = Group.find_by(lastname: 'Сотрудники').users
+                      .where(status: 1) # Выбор только активных учетных записей
+                      .order('users.lastname, users.firstname')
     @projects = Project.order(:name)
     @statuses = IssueStatus.order(:name)
   end

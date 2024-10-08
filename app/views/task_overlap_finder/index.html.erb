@@ -4,33 +4,46 @@
   <div class="error"><%= flash[:error] %></div>
 <% end %>
 
-<%= form_tag(task_overlap_finder_search_path, method: :post) do %>
-  <div>
-    <%= label_tag(:start_date, 'Дата начала') %>
-    <%= date_field_tag(:start_date, @start_date) %>
-  </div>
-  <div>
-    <%= label_tag(:end_date, 'Дата окончания') %>
-    <%= date_field_tag(:end_date, @end_date) %>
-  </div>
-  <div>
-    <%= label_tag(:user_id, 'Исполнитель') %>
-    <%= select_tag(:user_id, options_from_collection_for_select(@employees, :id, :name, @user_id)) %>
-  </div>
-  <div>
-    <%= label_tag(:project_ids, 'Проекты') %>
-    <%= select_tag(:project_ids, options_from_collection_for_select(@projects, :id, :name, @project_ids), multiple: true) %>
-  </div>
-  <div>
-    <%= label_tag(:status_ids, 'Статусы задач') %>
-    <%= select_tag(:status_ids, options_from_collection_for_select(@statuses, :id, :name, @status_ids), multiple: true) %>
-  </div>
-  <div>
-    <%= submit_tag('Найти задачи') %>
+<%= form_tag(task_overlap_finder_search_path, method: :post, class: 'form') do %>
+  <div class="box">
+    <fieldset class="box tabular">
+      <legend><strong>Введите параметры для поиска пересекающихся задач</strong></legend>
+
+      <p>
+        <%= label_tag(:start_date, 'Дата начала') %><br>
+        <%= date_field_tag(:start_date, @start_date, class: 'input-small') %>
+      </p>
+
+      <p>
+        <%= label_tag(:end_date, 'Дата окончания') %><br>
+        <%= date_field_tag(:end_date, @end_date, class: 'input-small') %>
+      </p>
+
+      <p>
+        <%= label_tag(:user_id, 'Исполнитель') %><br>
+        <%= select_tag(:user_id, options_from_collection_for_select(@employees, :id, :name, @user_id), class: 'input-large') %>
+      </p>
+
+      <p>
+        <%= label_tag(:project_ids, 'Проекты') %><br>
+        <%= select_tag(:project_ids, options_from_collection_for_select(@projects, :id, :name, @project_ids), multiple: true, size: 5, class: 'input-large') %>
+      </p>
+
+      <p>
+        <%= label_tag(:status_ids, 'Статусы задач') %><br>
+        <%= select_tag(:status_ids, options_from_collection_for_select(@statuses, :id, :name, @status_ids), multiple: true, size: 5, class: 'input-large') %>
+      </p>
+
+      <p>
+        <%= submit_tag('Найти задачи', class: 'button') %>
+      </p>
+
+    </fieldset>
   </div>
 <% end %>
 
 <h2>Результаты поиска</h2>
+
 <table class="list issues">
   <thead>
   <tr>
@@ -101,7 +114,13 @@
     table.list th, table.list td {
         text-align: left;
     }
+
+    /* Адаптация под мобильные устройства */
     @media (max-width: 600px) {
+        table.list th, table.list td {
+            display: block;
+            width: 100%;
+        }
         table.list th.subject, table.list td.subject {
             width: auto;
         }
@@ -110,5 +129,27 @@
             display: block;
             width: 100%;
         }
+    }
+
+    /* Дополнительные стили для формы */
+    .form {
+        margin: 20px 0;
+    }
+    .box {
+        padding: 10px;
+        border: 1px solid #ddd;
+        background-color: #f9f9f9;
+        margin-bottom: 20px;
+    }
+    fieldset.box.tabular {
+        border: 1px solid #ddd;
+        padding: 10px;
+    }
+    fieldset.box.tabular legend {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .form p {
+        margin-bottom: 15px;
     }
 </style>
