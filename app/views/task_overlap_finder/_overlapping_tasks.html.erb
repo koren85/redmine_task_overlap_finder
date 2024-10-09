@@ -1,31 +1,87 @@
 <% if overlapping_tasks.present? %>
   <hr>
   <h3><strong style="color: red;">Пересекающиеся задачи</strong></h3>
-  <table class="list issues">
-    <thead>
-    <tr>
-      <th class="id">Номер задачи</th>
-      <th class="subject">Тема задачи</th>
-      <th class="start_date">Дата начала</th>
-      <th class="due_date">Срок завершения</th>
-      <th class="estimated_hours">Оценка задачи</th>
-      <th class="project">Проект</th>
-      <th class="fixed_version">Контракт</th>
-    </tr>
-    </thead>
-    <tbody>
-    <% overlapping_tasks.each do |task| %>
+  <button id="toggle-overlapping-tasks" onclick="toggleOverlappingTasks()">Свернуть/Развернуть таблицу</button>
+  <div id="overlapping-tasks-table">
+    <table class="list issues" id="overlapping-tasks">
+      <thead>
       <tr>
-        <td><%= link_to "##{task.id}", issue_path(task) %></td>
-        <td><%= link_to task.subject, issue_path(task) %></td>
-        <td><%= task.start_date %></td>
-        <td><%= task.due_date %></td>
-        <td><%= task.estimated_hours %></td>
-        <td><%= task.project.name %></td>
-        <td><%= task.fixed_version ? task.fixed_version.name : '-' %></td>
+        <th class="id"><a href="#" onclick="sortTable(0)">Номер задачи</a></th>
+        <th class="subject">Тема задачи</th>
+        <th class="start_date"><a href="#" onclick="sortTable(2)">Дата начала</a></th>
+        <th class="due_date"><a href="#" onclick="sortTable(3)">Срок завершения</a></th>
+        <th class="estimated_hours">Оценка задачи</th>
+        <th class="overlap_percentage"><a href="#" onclick="sortTable(5)">Степень пересечения (%)</a></th>
+        <th class="project">Проект</th>
+        <th class="fixed_version">Контракт</th>
       </tr>
-    <% end %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+      <% overlapping_tasks.each do |task_info| %>
+        <% task = task_info[:task] %>
+        <tr>
+          <td><%= link_to "##{task.id}", issue_path(task) %></td>
+          <td><%= link_to task.subject, issue_path(task) %></td>
+          <td><%= task.start_date %></td>
+          <td><%= task.due_date %></td>
+          <td><%= task.estimated_hours %></td>
+          <td><%= task_info[:overlap_percentage] %> %</td>
+          <td><%= task.project.name %></td>
+          <td><%= task.fixed_version ? task.fixed_version.name : '-' %></td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  </div>
   <hr>
 <% end %>
+
+<script>
+    function sortTable(n) {
+        var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+        table = document.getElementById("overlapping-tasks");
+        switching = true;
+        dir = "asc";
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+                if (dir == "asc") {
+                    if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else if (dir == "desc") {
+                    if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount++;
+            } else {
+                if (switchcount == 0 && dir == "asc") {
+                    dir = "desc";
+                    switching = true;
+                }
+            }
+        }
+    }
+</script>
+
+<script>
+    function toggleOverlappingTasks() {
+        var table = document.getElementById("overlapping-tasks-table");
+        if (table.style.display === "none") {
+            table.style.display = "block";
+        } else {
+            table.style.display = "none";
+        }
+    }
+</script>

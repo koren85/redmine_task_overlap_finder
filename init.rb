@@ -10,6 +10,8 @@ Redmine::Plugin.register :redmine_task_overlap_finder do
 
 
   settings default: {
+    'overlap_threshold' => 50, # Значение по умолчанию для степени пересечения (в процентах)
+
     'trackers' => [],
     'user_groups' => [],
     'statuses' => []

@@ -26,3 +26,11 @@
     <br>
   <% end %>
 </fieldset>
+
+<fieldset>
+  <legend>Степень пересечения задач (в процентах)</legend>
+  <p>Задайте процент пересечения для того, чтобы группы задач выделялись разными цветами (например, от 0 до 100%).</p>
+    <%= text_field_tag 'settings[overlap_threshold]', @settings['overlap_threshold'] || 50, class: 'input-small' %> %
+
+
+</fieldset>

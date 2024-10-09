@@ -44,51 +44,74 @@
 
 <h2>Результаты поиска</h2>
 
-<table class="list issues">
-  <thead>
-  <tr>
-    <th class="id">#</th>
-    <th class="subject">Тема</th>
-    <th class="start_date">Дата начала</th>
-    <th class="due_date">Дата окончания</th>
-    <th class="estimated_hours">Оценка (ч)</th>
-    <th class="total_estimated_hours">Общая оценка (ч)</th>
-    <th class="spent_hours">Трудозатраты (ч)</th>
-    <th class="assigned_to">Исполнитель</th>
-    <th class="project">Проект</th>
-    <th class="status">Статус</th>
-  </tr>
-  </thead>
-  <tbody>
-  <% if @tasks.present? %>
-    <% @tasks.each do |task| %>
-      <tr>
-        <td><%= link_to "##{task.id}", issue_path(task) %></td>
-        <td class="subject"><%= task.subject %></td>
-        <td><%= task.start_date %></td>
-        <td><%= task.due_date %></td>
-        <td><%= task.estimated_hours %></td>
-        <td><%= TaskOverlapFinder.total_estimated_hours(task) %></td>
-        <td><%= TaskOverlapFinder.total_spent_hours(task, @user_id) %></td>
-        <td><%= task.assigned_to.name %></td>
-        <td><%= task.project.name %></td>
-        <td><%= task.status.name %></td>
-      </tr>
+<% if @tasks.present? %>
+
+  <% # Группировка задач по пересекающимся интервалам %>
+  <% overlapping_groups = [] %>
+  <% @tasks.each do |task_info| %>
+    <% task = task_info[:task] %>
+    <% group_found = false %>
+
+    <% overlapping_groups.each do |group| %>
+      <% if group.any? { |t| t[:task].start_date <= task.due_date && t[:task].due_date >= task.start_date } %>
+        <% group << task_info %>
+        <% group_found = true %>
+        <% break %>
+      <% end %>
     <% end %>
-    <tr>
-      <td colspan="4"><strong>Суммарные значения</strong></td>
-      <td><%= @total_estimated_hours %></td>
-      <td><%= @total_total_estimated_hours %></td>
-      <td><%= @total_spent_hours %></td>
-      <td colspan="3"></td>
-    </tr>
-  <% else %>
-    <tr>
-      <td colspan="10">Нет результатов</td>
-    </tr>
+
+    <% overlapping_groups << [task_info] unless group_found %>
   <% end %>
-  </tbody>
-</table>
+
+  <% overlapping_groups.each_with_index do |group, index| %>
+    <h3>Группа пересекающихся задач <%= index + 1 %></h3>
+    <table class="list issues">
+      <thead>
+      <tr>
+        <th class="id">#</th>
+        <th class="subject">Тема</th>
+        <th class="start_date">Дата начала</th>
+        <th class="due_date">Дата окончания</th>
+        <th class="estimated_hours">Оценка (ч)</th>
+        <th class="overlap_percentage">Степень пересечения (%)</th>
+        <th class="total_estimated_hours">Общая оценка (ч)</th>
+        <th class="spent_hours">Трудозатраты (ч)</th>
+        <th class="assigned_to">Исполнитель</th>
+        <th class="project">Проект</th>
+        <th class="status">Статус</th>
+      </tr>
+      </thead>
+      <tbody>
+      <% group.each do |task_info| %>
+        <% task = task_info[:task] %>
+        <% overlap_percentage = task_info[:overlap_percentage] %>
+
+        <% color_class = case overlap_percentage
+                         when 75..100 then 'high-overlap'
+                         when 50..74 then 'medium-overlap'
+                         else 'low-overlap'
+                         end %>
+        <tr class="<%= color_class %>">
+          <td><%= link_to "##{task.id}", issue_path(task) %></td>
+          <td class="subject"><%= task.subject %></td>
+          <td><%= task.start_date %></td>
+          <td><%= task.due_date %></td>
+          <td><%= task.estimated_hours %></td>
+          <td><%= overlap_percentage %></td>
+          <td><%= TaskOverlapFinder.total_estimated_hours(task) %></td>
+          <td><%= TaskOverlapFinder.total_spent_hours(task, @user_id) %></td>
+          <td><%= task.assigned_to.name %></td>
+          <td><%= task.project.name %></td>
+          <td><%= task.status.name %></td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  <% end %>
+
+<% else %>
+  <p>Нет результатов</p>
+<% end %>
 
 <style>
     table.list {
@@ -151,5 +174,16 @@
     }
     .form p {
         margin-bottom: 15px;
+    }
+
+    /* Стили для выделения групп по степени пересечения */
+    .high-overlap {
+        background-color: #ffcccc; /* Красный для максимального пересечения */
+    }
+    .medium-overlap {
+        background-color: #ffd966; /* Желтый для среднего пересечения */
+    }
+    .low-overlap {
+        background-color: #cce5ff; /* Синий для минимального пересечения */
     }
 </style>

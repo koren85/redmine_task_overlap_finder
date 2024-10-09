@@ -63,7 +63,8 @@ module TaskOverlapFinderHookListener
       if issue.saved_change_to_start_date? || issue.saved_change_to_due_date? || issue.saved_change_to_assigned_to_id?
         overlapping_tasks = find_overlapping_tasks(issue)
         unless overlapping_tasks.empty?
-          links = overlapping_tasks.map do |task|
+          links = overlapping_tasks.map do |task_info|
+            task = task_info[:task]
             "##{task.id} - " + context[:controller].view_context.link_to(task.subject, context[:controller].view_context.issue_path(task))
           end.join(', ')
 
@@ -78,7 +79,12 @@ module TaskOverlapFinderHookListener
       assigned_user = AssignedUser.new(issue.assigned_to_id)
 
       # Убираем ограничение по проекту и ищем задачи по всем проектам
-      RedmineTaskOverlapFinder::PluginAPI.find_tasks(date_range, assigned_user, [], [issue.status_id]).where.not(id: issue.id)
+      overlapping_tasks_relation = RedmineTaskOverlapFinder::PluginAPI.find_tasks(date_range, assigned_user, [], [issue.status_id])
+
+      # Фильтрация найденных задач для исключения текущей задачи
+      overlapping_tasks_relation = overlapping_tasks_relation.reject { |task_info| task_info[:task].id == issue.id }
+
+      overlapping_tasks_relation
     end
   end
 end
