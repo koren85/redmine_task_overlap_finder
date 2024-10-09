@@ -1,40 +1,46 @@
 <% if overlapping_tasks.present? %>
   <hr>
   <h3><strong style="color: red;">Пересекающиеся задачи</strong></h3>
-  <button id="toggle-overlapping-tasks" onclick="toggleOverlappingTasks()">Свернуть/Развернуть таблицу</button>
-  <div id="overlapping-tasks-table">
-    <table class="list issues" id="overlapping-tasks">
-      <thead>
-      <tr>
-        <th class="id"><a href="#" onclick="sortTable(0)">Номер задачи</a></th>
-        <th class="subject">Тема задачи</th>
-        <th class="start_date"><a href="#" onclick="sortTable(2)">Дата начала</a></th>
-        <th class="due_date"><a href="#" onclick="sortTable(3)">Срок завершения</a></th>
-        <th class="estimated_hours">Оценка задачи</th>
-        <th class="overlap_percentage"><a href="#" onclick="sortTable(5)">Степень пересечения (%)</a></th>
-        <th class="project">Проект</th>
-        <th class="fixed_version">Контракт</th>
+  <table class="list issues">
+    <thead>
+    <tr>
+      <th class="id">Номер задачи</th>
+      <th class="subject">Тема задачи</th>
+      <th class="start_date">Дата начала</th>
+      <th class="due_date">Срок завершения</th>
+      <th class="estimated_hours">Оценка задачи</th>
+      <th class="overlap_percentage">Степень пересечения (%)</th>
+      <th class="project">Проект</th>
+      <th class="fixed_version">Контракт</th>
+    </tr>
+    </thead>
+    <tbody>
+    <% overlapping_tasks.each do |task_info| %>
+      <% task = task_info[:task] %>
+      <% overlap_percentage = task_info[:overlap_percentage] %>
+
+      <% color_class = case overlap_percentage
+                       when 75..100 then 'high-overlap'
+                       when 50..74 then 'medium-overlap'
+                       else 'low-overlap'
+                       end %>
+
+      <tr class="<%= color_class %>">
+        <td><%= link_to "##{task.id}", issue_path(task) %></td>
+        <td><%= link_to task.subject, issue_path(task) %></td>
+        <td><%= task.start_date %></td>
+        <td><%= task.due_date %></td>
+        <td><%= task.estimated_hours %></td>
+        <td><%= overlap_percentage %></td>
+        <td><%= task.project.name %></td>
+        <td><%= task.fixed_version ? task.fixed_version.name : '-' %></td>
       </tr>
-      </thead>
-      <tbody>
-      <% overlapping_tasks.each do |task_info| %>
-        <% task = task_info[:task] %>
-        <tr>
-          <td><%= link_to "##{task.id}", issue_path(task) %></td>
-          <td><%= link_to task.subject, issue_path(task) %></td>
-          <td><%= task.start_date %></td>
-          <td><%= task.due_date %></td>
-          <td><%= task.estimated_hours %></td>
-          <td><%= task_info[:overlap_percentage] %> %</td>
-          <td><%= task.project.name %></td>
-          <td><%= task.fixed_version ? task.fixed_version.name : '-' %></td>
-        </tr>
-      <% end %>
-      </tbody>
-    </table>
-  </div>
+    <% end %>
+    </tbody>
+  </table>
   <hr>
 <% end %>
+
 
 <script>
     function sortTable(n) {
@@ -84,4 +90,31 @@
             table.style.display = "none";
         }
     }
+</script>
+
+<style>
+/* Стили для выделения групп по степени пересечения */
+.high-overlap {
+background-color: #ffcccc; /* Красный для максимального пересечения */
+}
+.medium-overlap {
+background-color: #ffd966; /* Желтый для среднего пересечения */
+}
+.low-overlap {
+background-color: #cce5ff; /* Синий для минимального пересечения */
+}
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('tr.high-overlap').forEach(function (row) {
+            row.style.backgroundColor = '#ffcccc';
+        });
+        document.querySelectorAll('tr.medium-overlap').forEach(function (row) {
+            row.style.backgroundColor = '#ffd966';
+        });
+        document.querySelectorAll('tr.low-overlap').forEach(function (row) {
+            row.style.backgroundColor = '#cce5ff';
+        });
+    });
 </script>

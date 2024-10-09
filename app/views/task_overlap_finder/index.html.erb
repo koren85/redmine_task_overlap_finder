@@ -187,3 +187,17 @@
         background-color: #cce5ff; /* Синий для минимального пересечения */
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('tr.high-overlap').forEach(function (row) {
+            row.style.backgroundColor = '#ffcccc';
+        });
+        document.querySelectorAll('tr.medium-overlap').forEach(function (row) {
+            row.style.backgroundColor = '#ffd966';
+        });
+        document.querySelectorAll('tr.low-overlap').forEach(function (row) {
+            row.style.backgroundColor = '#cce5ff';
+        });
+    });
+</script>
